@@ -54,7 +54,8 @@ namespace bbWW {
     bool wStarlnu            = false;
     bool lepton25            = true;
     bool qjet25              = true;
-    bool qjetEta              = true;
+    bool qjetEta             = true;
+    bool qjetLead30          = true;
 
     std::map<std::string, bool*> L1_triggers_mon;
 

@@ -18,7 +18,7 @@ eventHists::eventHists(std::string name, fwlite::TFileService& fs, bool isMC, bo
     dRbb = dir.make<TH1F>("dRbb", (name+"/dRbb;  #DeltaR(b,b); Entries").c_str(), 50,0,5);
     vbLead = new nTupleAnalysis::truthParticleHists(name+"/blead", fs, "leading b");
     vbSubl = new nTupleAnalysis::truthParticleHists(name+"/bsubl", fs, "sub-leading b");
-
+    
     vHWW   = new nTupleAnalysis::truthParticleHists(name+"/HWW", fs, "H->WW System");
     dRWW = dir.make<TH1F>("dRWW", (name+"/dRWW;  #DeltaR(W,W); Entries").c_str(), 50,0,5);
 
@@ -34,6 +34,16 @@ eventHists::eventHists(std::string name, fwlite::TFileService& fs, bool isMC, bo
     vqLead_mJet = new nTupleAnalysis::truthParticleHists(name+"/qlead_mJet", fs, "leading q (from W)");
     vqLead_mJet25 = new nTupleAnalysis::truthParticleHists(name+"/qlead_mJet25", fs, "leading q (from W)");
     vqLead_mTrkJet = new nTupleAnalysis::truthParticleHists(name+"/qlead_mTrkJet", fs, "leading q (from W)");
+    
+    qLeadPt_vs_qSublPt   = dir.make<TH2F>("qLeadPt_vs_qSublPt",  "qLeadPt_vs_qSublPt;Subl-Leading q P_{T}-gen [GeV]; Leading q P_{T}-gen [GeV]",50,0,100,50,0,100);
+    qLeadEta_vs_qSublPt   = dir.make<TH2F>("qLeadEta_vs_qSublPt",  "qLeadEta_vs_qSublPt;Subl-Leading q P_{T}-gen [GeV]; Leading q |#eta|-gen",50,0,100,50,0,3);
+    mW_vs_qSublPt        = dir.make<TH2F>("mW_vs_qSublPt",  "mW_vs_qSublPt;Sub-leading q P_{T}-gen [GeV]; mW(qq)-gen [GeV]",50,0,100,50,30,130);
+//      2) if it looks feasible, you could then plot <mW> vs pT,jet2 for selection with pT,jet1>30 GeV (or another suitable cut). 
+//        Probably good to also simultaneously plot <pT,jet1> and <|eta,jet1> vs pT,jet2 for pT,jet1>30 GeV to make sure the reference jet position is not drifting, so we can trust that the reference JEC is stable
+    
+    ave_mW_vs_qSublPt        = dir.make<TProfile>("ave_mW_vs_qSublPt",        "ave_mW_vs_qSublPt;Sub-leading q P_{T}-gen [GeV]; mW(qq)-gen [GeV]", 50, 0, 100, 0,  100,"s");  
+    ave_qLeadPt_vs_qSublPt   = dir.make<TProfile>("ave_qLeadPt_vs_qSublPt"  , "ave_qLeadPt_vs_qSublPt;Sub-leading q P_{T}-gen [GeV];<Leading q P_{T}-gen> [GeV]", 50, 0, 100, 0,  200,"s");  
+    ave_qLeadEta_vs_qSublPt   = dir.make<TProfile>("ave_qLeadEta_vs_qSublPt"  ,"ave_qLeadEta_vs_qSublPt;Sub-leading q P_{T}-gen [GeV];<Leading |#eta|-gen>", 50, 0, 100, 0,  3, "s");  
 
     vqSubl = new nTupleAnalysis::truthParticleHists(name+"/qsubl", fs, "sub-leading q (from W)");
     vqSubl_s = new nTupleAnalysis::truthParticleHists(name+"/qsubl_s", fs, "sub-leading s-q (from W)");
@@ -146,6 +156,17 @@ void eventHists::Fill(eventData* event){
       if(abs(sublq->pdgId) == 4)
 	vqSubl_c  ->Fill(sublq, event->weight);
 
+      float qSublPt = sublq->p.Pt();
+      float qLeadPt = leadq->p.Pt();
+      float qLeadEta = fabs(leadq->p.Eta());
+      float mWqq = Wqq->p.M();
+      qLeadPt_vs_qSublPt->Fill(qSublPt,qLeadPt, event->weight);
+      qLeadEta_vs_qSublPt->Fill(qSublPt,qLeadEta, event->weight);
+      mW_vs_qSublPt->Fill(qSublPt, mWqq,       event->weight);
+
+      ave_mW_vs_qSublPt->Fill(qSublPt,  mWqq, event->weight);
+      ave_qLeadPt_vs_qSublPt->Fill(qSublPt,  qLeadPt, event->weight);
+      ave_qLeadEta_vs_qSublPt->Fill(qSublPt,  qLeadEta, event->weight);
 
 
       const nTupleAnalysis::jetPtr leadq_matchedJet = leadq->matchedJet.lock();

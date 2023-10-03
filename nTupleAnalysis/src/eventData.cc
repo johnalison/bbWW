@@ -136,6 +136,7 @@ void eventData::update(long int e){
       qjet25 = ((truth->Wqqs[0]->daughters[0]->p.Pt() > 25) && (truth->Wqqs[0]->daughters[1]->p.Pt() > 25));
 
       qjetEta = ( (fabs(truth->Wqqs[0]->daughters[0]->p.Eta()) < 2.5) && (fabs(truth->Wqqs[0]->daughters[1]->p.Eta()) < 2.5));
+      qjetLead30 = ((truth->Wqqs[0]->daughters[0]->p.Pt() > 30) || (truth->Wqqs[0]->daughters[1]->p.Pt() > 30));
 
     }
 

@@ -102,7 +102,8 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     wStarlnu       = new eventHists("wStarlnu",      fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     wStarqq        = new eventHists("wStarqq",       fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lepton25       = new eventHists("lepton25",       fs, isMC, blind, histDetailLevel, debug);
-  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetEta         = new eventHists("qjetEta",       fs, isMC, blind, histDetailLevel, debug);
+  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetEta        = new eventHists("qjetEta",       fs, isMC, blind, histDetailLevel, debug);
+  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetLead30     = new eventHists("qjetLead30",     fs, isMC, blind, histDetailLevel, debug);
   ///if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lq25           = new eventHists("lq25",        fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon0_Jpsi   = new eventHists("Dimuon0_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon25_Jpsi  = new eventHists("Dimuon25_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
@@ -116,6 +117,7 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   if(wStarqq)      std::cout << "Turning on wStarqq Hists" << std::endl; 
   if(lepton25)      std::cout << "Turning on lepton25 Hists" << std::endl; 
   if(qjetEta)      std::cout << "Turning on qjetEta Hists" << std::endl; 
+  if(qjetLead30)   std::cout << "Turning on qjetLead30 Hists" << std::endl; 
   //if(lq25)        std::cout << "Turning on lq25 Hists" << std::endl; 
 //  if(Dimuon0_Jpsi)  std::cout << "Turning on Dimuon0_Jpsi Hists" << std::endl; 
 //  if(Dimuon25_Jpsi) std::cout << "Turning on Dimuon25_Jpsi Hists" << std::endl; 
@@ -410,6 +412,13 @@ int analysis::processEvent(){
     }
     if(qjetEta)   qjetEta->Fill(event);
     //if(lq25     != NULL && (event->qjetEta && event->lepton25))   lq25->Fill(event);
+
+    if(!event->qjetLead30) {
+      if(debug) cout << "Fail qjet Lead 30" << endl;
+      return 0;
+    }
+    if(qjetLead30)   qjetLead30->Fill(event);
+
 
   } 
 

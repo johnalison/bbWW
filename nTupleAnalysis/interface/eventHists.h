@@ -50,6 +50,14 @@ namespace bbWW {
     nTupleAnalysis::truthParticleHists* vqLead_mTrkJet;
     nTupleAnalysis::truthParticleHists* vqSubl_mTrkJet;
 
+
+    TH2F* qLeadPt_vs_qSublPt;
+    TH2F* qLeadEta_vs_qSublPt;
+    TH2F* mW_vs_qSublPt;
+    TProfile* ave_mW_vs_qSublPt     ;
+    TProfile* ave_qLeadPt_vs_qSublPt;
+    TProfile* ave_qLeadEta_vs_qSublPt;
+
     nTupleAnalysis::truthParticleHists* vl;
     nTupleAnalysis::truthParticleHists* vnu;
 

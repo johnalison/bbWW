@@ -73,6 +73,7 @@ namespace bbWW {
     eventHists* wStarqq    = NULL;
     eventHists* lepton25   = NULL;
     eventHists* qjetEta     = NULL;
+    eventHists* qjetLead30     = NULL;
     //eventHists* lq25       = NULL;
 
     //tagHists* passPreSel    = NULL;
