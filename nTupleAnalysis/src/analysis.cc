@@ -80,14 +80,17 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   lumiBlocks = _lumiBlocks;
   event      = new eventData(events, isMC, year, debug, fastSkim, bjetSF, btagVariations, JECSyst);   
   treeEvents = events->GetEntries();
-//  cutflow    = new tagCutflowHists("cutflow", fs, isMC, debug);
+  cutflowTTCalib  = new cutflowHists("cutflowTTCalib", fs, isMC, debug);
+  cutflowTTCalib->AddCut("jetMultiplicity");
+  cutflowTTCalib->AddCut("jetMultiplicity30");
+  cutflowTTCalib->AddCut("bTagMultiplicity");
 //  if(isDataMCMix){
 //    cutflow->AddCut("mixedEventIsData_3plus4Tag");
 //    cutflow->AddCut("mixedEventIsMC_3plus4Tag");
 //    cutflow->AddCut("mixedEventIsData");
 //    cutflow->AddCut("mixedEventIsMC");
 //  }
-//  cutflow->AddCut("lumiMask");
+
 //  cutflow->AddCut("HLT");
 //  cutflow->AddCut("jetMultiplicity");
 //  cutflow->AddCut("bTags");
@@ -104,6 +107,7 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lepton25       = new eventHists("lepton25",       fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetEta        = new eventHists("qjetEta",       fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetLead30     = new eventHists("qjetLead30",     fs, isMC, blind, histDetailLevel, debug);
+  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     ttbarCalib     = new eventHists("ttbarCalib",     fs, isMC, blind, histDetailLevel, debug);
   ///if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lq25           = new eventHists("lq25",        fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon0_Jpsi   = new eventHists("Dimuon0_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon25_Jpsi  = new eventHists("Dimuon25_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
@@ -118,6 +122,7 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   if(lepton25)      std::cout << "Turning on lepton25 Hists" << std::endl; 
   if(qjetEta)      std::cout << "Turning on qjetEta Hists" << std::endl; 
   if(qjetLead30)   std::cout << "Turning on qjetLead30 Hists" << std::endl; 
+  if(ttbarCalib)   std::cout << "Turning on ttbarCalib Hists" << std::endl; 
   //if(lq25)        std::cout << "Turning on lq25 Hists" << std::endl; 
 //  if(Dimuon0_Jpsi)  std::cout << "Turning on Dimuon0_Jpsi Hists" << std::endl; 
 //  if(Dimuon25_Jpsi) std::cout << "Turning on Dimuon25_Jpsi Hists" << std::endl; 
@@ -393,50 +398,19 @@ int analysis::processEvent(){
   
   if(allEvents != NULL ) allEvents->Fill(event);
 
+  //
+  // genPartStudy
+  // 
   if(isMC){
-    if(mHHlt400 != NULL && (event->mbbWW > 0 && event->mbbWW < 400)) mHHlt400->Fill(event);
-    
-    if(wStarlnu != NULL && event->wStarlnu) wStarlnu->Fill(event);
-    if(wStarqq  != NULL && !event->wStarlnu) wStarqq->Fill(event);
+    genPartStudy();
+  }
 
-    if(!event->lepton25) {
-      if(debug) cout << "Fail Lepton PT" << endl;
-      return 0;
-    }
-    if(lepton25) lepton25->Fill(event);
+  //
+  // TTbar Calibration
+  //
+  ttbarCalibrationStudy();
 
 
-    if(!event->qjetEta) {
-      if(debug) cout << "Fail qjet Eta" << endl;
-      return 0;
-    }
-    if(qjetEta)   qjetEta->Fill(event);
-    //if(lq25     != NULL && (event->qjetEta && event->lepton25))   lq25->Fill(event);
-
-    if(!event->qjetLead30) {
-      if(debug) cout << "Fail qjet Lead 30" << endl;
-      return 0;
-    }
-    if(qjetLead30)   qjetLead30->Fill(event);
-
-
-  } 
-
-
-
-//  if(Dimuon0_Jpsi != NULL && passHLT_Dimuon0) Dimuon0_Jpsi->Fill(event);
-//  if(Dimuon25_Jpsi != NULL && event->HLT_triggers["HLT_Dimuon25_Jpsi"])        Dimuon25_Jpsi->Fill(event);
-//
-//
-//  //
-//  //  Preselection
-//  //
-//  bool jetMultiplicity  = (event->selJets.size() >= 2);
-//  if(!jetMultiplicity){
-//    if(debug) cout << "Fail Jet Multiplicity" << endl;
-//    return 0;
-//  }
-////  cutflow->Fill(event, "jetMultiplicity", true);
 //
 //  bool muonMultiplicity = (event->preSelMuons.size() >= 2);
 //  if(!muonMultiplicity){
@@ -446,14 +420,6 @@ int analysis::processEvent(){
 ////  cutflow->Fill(event, "muonMultiplicity", true);
 //  
 //  if(preSel != NULL && passHLT_Dimuon0) preSel->Fill(event);
-//
-//  bool bTagMultiplicity = (event->btagJets.size() >= 2);
-//  if(!bTagMultiplicity){
-//    if(debug) cout << "Fail bTag Multiplicity" << endl;
-//    return 0;
-//  }
-//
-//  if(bTags != NULL && passHLT_Dimuon0) bTags->Fill(event);
 //
 
   
@@ -541,3 +507,71 @@ analysis::~analysis(){
   }
 } 
 
+
+void analysis::genPartStudy(){
+
+  if(mHHlt400 != NULL && (event->mbbWW > 0 && event->mbbWW < 400)) mHHlt400->Fill(event);
+    
+  if(wStarlnu != NULL && event->wStarlnu) wStarlnu->Fill(event);
+  if(wStarqq  != NULL && !event->wStarlnu) wStarqq->Fill(event);
+
+  if(!event->lepton25) {
+    if(debug) cout << "Fail Lepton PT" << endl;
+    return;
+  }
+  if(lepton25) lepton25->Fill(event);      
+
+  
+  if(!event->qjetEta) {
+    if(debug) cout << "Fail qjet Eta" << endl;
+    return;
+  }
+  if(qjetEta)   qjetEta->Fill(event);
+
+  if(!event->qjetLead30) {
+    if(debug) cout << "Fail qjet Lead 30" << endl;
+    return;
+  }
+  if(qjetLead30)   qjetLead30->Fill(event);	  
+  return;
+}
+
+
+void analysis::ttbarCalibrationStudy(){
+
+  cutflowTTCalib->Fill("all", event);
+
+  //
+  //  Preselection
+  //
+  bool jetMultiplicity    = (event->selJets  .size() >= 4);
+  if(!jetMultiplicity){
+    if(debug) cout << "Fail Jet Multiplicity" << endl;
+    return;
+  }
+  cutflowTTCalib->Fill("jetMultiplicity", event);
+
+  bool jetMultiplicity30  = (event->selJets30.size() >= 3);
+  if(!jetMultiplicity30){
+    if(debug) cout << "Fail Jet Multiplicity30" << endl;
+    return;
+  }
+  cutflowTTCalib->Fill("jetMultiplicity30", event);
+
+  bool bTagMultiplicity = (event->btagJets.size() == 2);
+  if(!bTagMultiplicity){
+    if(debug) cout << "Fail bJet Multiplicity" << endl;
+    return;
+  }
+  cutflowTTCalib->Fill("bTagMultiplicity", event);
+
+
+
+  //bool passNLeptons = (event->pass1Lepton); 
+  event->doTTbarTandPSelection();
+
+  if(ttbarCalib) ttbarCalib->Fill(event);
+
+
+  return;
+}

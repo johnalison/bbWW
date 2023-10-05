@@ -55,6 +55,8 @@ eventHists::eventHists(std::string name, fwlite::TFileService& fs, bool isMC, bo
 
     vl     = new nTupleAnalysis::truthParticleHists(name+"/l", fs, "l (from W)");
     vnu    = new nTupleAnalysis::truthParticleHists(name+"/nu", fs, "nu (from W)");
+
+    genJets = new nTupleAnalysis::truthParticleHists(name+"/genJets", fs, "genJets");
   }
 
   allJets = new nTupleAnalysis::jetHists(name+"/allJets", fs, "All Jets");
@@ -70,6 +72,18 @@ eventHists::eventHists(std::string name, fwlite::TFileService& fs, bool isMC, bo
 //  selDiMuons      = new nTupleAnalysis::dimuonHists(name+"/selDiMuons", fs, "SelDiSel Muons");
 //
 //  allElecs        = new nTupleAnalysis::elecHists(name+"/allElecs", fs, "All Elecs");
+
+
+  //
+  //   TTbar TandP Calibration
+  //
+  WqTags   = new nTupleAnalysis::jetHists(name+"/WqTags", fs, "Wq Tag Jets");
+  WqProbes = new nTupleAnalysis::jetHists(name+"/WqProbes", fs, "Wq Probe Jets");
+  mWqqTandP = dir.make<TH1F>("mWqqTandP", (name+"/mWqqTandP;  nWq Probes; Entries").c_str(), 100,0,150);
+
+  //    TH1F* nWqProbes;
+  //    TH1F* mWTandP;
+
 
 } 
 
@@ -237,6 +251,12 @@ void eventHists::Fill(eventData* event){
 
   
   }//event->truth
+
+  if(event->truthJets){
+    for(const nTupleAnalysis::particlePtr & genJet: event->genJets){
+      genJets->Fill(genJet, event->weight);
+    }
+  }
   
 
 
@@ -259,6 +279,9 @@ void eventHists::Fill(eventData* event){
   //
   //allJets->nJets->Fill(event->allJets.size(), event->weight);
   for(auto &trkJet: event->allTrackJets) allTrackJets->Fill(trkJet->p, event->weight);
+
+  
+  
 
 
 //  unsigned int nBTagJets = event->btagJets.size()   ;
@@ -304,6 +327,34 @@ void eventHists::Fill(eventData* event){
 //
 //
 //  }
+
+
+  //
+  //  TTBar TandP Calibration
+  //
+  WqTags->nJets->Fill(event->WqTagJets.size(), event->weight);
+  for(auto &jet: event->WqTagJets) WqTags->Fill(jet, event->weight);
+
+  //
+  //  Made dr to nearest q from W
+  //    - Figure out a good mathicng critera
+
+  //
+  //  Add plots for truth matchd W
+  //    Figure out purity
+
+  //
+  // Mass
+  //
+  WqProbes->nJets->Fill(event->WqProbeJets.size(), event->weight);
+  for(const nTupleAnalysis::jetPtr& WqProbe : event->WqProbeJets){
+    WqProbes->Fill(WqProbe, event->weight);
+
+    for(const nTupleAnalysis::jetPtr& WqTag : event->WqTagJets){    
+      mWqqTandP->Fill( (WqProbe->p + WqTag->p).M(), event->weight);
+    }
+  }
+
 
 
   if(debug) cout << "eventHists::Fill left " << endl;

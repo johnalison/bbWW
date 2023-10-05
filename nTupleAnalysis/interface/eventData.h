@@ -39,10 +39,13 @@ namespace bbWW {
     float weight = 1.0;
 
     nTupleAnalysis::truthData* truth = NULL;
+    nTupleAnalysis::truthParticle* truthJets = NULL;
+    std::vector<nTupleAnalysis::particlePtr> genJets;//jets passing pt/eta and bTagging requirements
+
     float mbbWW;
 
     //Predefine btag sorting functions
-    float       bTag    = 0.6;
+    float       bTag    = 0.4168; //0.6;
     std::string bTagger = "deepFlavB";
 
     //triggers
@@ -64,13 +67,21 @@ namespace bbWW {
     float jetPtMin = 0;
     const float jetEtaMax= 2.4;
     const int puIdMin = 0b110;//7=tight, 6=medium, 4=loose working point
-    const bool doJetCleaning=false;
+    const bool doJetCleaning=true;
      
     nTupleAnalysis::jetData* treeJets;
     std::vector<nTupleAnalysis::jetPtr> allJets;//all jets in nTuple
     std::vector<nTupleAnalysis::jetPtr> selJets;//jets passing pt/eta requirements
+    std::vector<nTupleAnalysis::jetPtr> selJets30;//jets passing pt > 30/eta requirements
     std::vector<nTupleAnalysis::jetPtr> btagJets;//jets passing pt/eta and bTagging requirements
-    std::vector<nTupleAnalysis::jetPtr> ctagJets;//jets passing pt/eta and cTagging requirements
+
+    //  
+    // For the TTBar TandP calibration
+    //
+    std::vector< nTupleAnalysis::jetPtr > WqTagJets;
+    std::vector< nTupleAnalysis::jetPtr > WqProbeJets;
+
+    //std::vector<nTupleAnalysis::jetPtr> ctagJets;//jets passing pt/eta and cTagging requirements
 
     nTupleAnalysis::trackJetData* treeTrackJets;
     std::vector<nTupleAnalysis::trackJetPtr> allTrackJets;//all track jets in nTuple
@@ -100,7 +111,7 @@ namespace bbWW {
     void update(long int);
     void buildEvent();
     void resetEvent();
-
+    void doTTbarTandPSelection();
 
     void dump();
     ~eventData(); 

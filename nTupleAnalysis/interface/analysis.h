@@ -20,7 +20,7 @@
 #include "nTupleAnalysis/baseClasses/interface/truthParticle.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "bbWW/nTupleAnalysis/interface/eventData.h"
-//#include "ZZ4b/nTupleAnalysis/interface/cutflowHists.h"
+#include "bbWW/nTupleAnalysis/interface/cutflowHists.h"
 //#include "ZZ4b/nTupleAnalysis/interface/tagCutflowHists.h"
 #include "bbWW/nTupleAnalysis/interface/eventHists.h"
 //#include "ZZ4b/nTupleAnalysis/interface/tagHists.h"
@@ -63,7 +63,7 @@ namespace bbWW {
 
     int treeEvents;
     eventData* event;
-    //tagCutflowHists* cutflow;
+    cutflowHists* cutflowTTCalib;
     //lumiHists* lumiCounts    = NULL;
     float  lumiLastWrite    = 0;
 
@@ -74,6 +74,7 @@ namespace bbWW {
     eventHists* lepton25   = NULL;
     eventHists* qjetEta     = NULL;
     eventHists* qjetLead30     = NULL;
+    eventHists* ttbarCalib     = NULL;
     //eventHists* lq25       = NULL;
 
     //tagHists* passPreSel    = NULL;
@@ -175,6 +176,13 @@ namespace bbWW {
     // only used when overwritting the input picoAOD info (eg: in hemisphere mixing)
     //
     void createPicoAODBranches();
+
+
+    //
+    //  Studies
+    //
+    void genPartStudy();
+    void ttbarCalibrationStudy();
 
     // Write out all event and run numbers to histogram file
     bool writeOutEventNumbers = false;

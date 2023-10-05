@@ -1,4 +1,5 @@
 #include "bbWW//nTupleAnalysis/interface/eventData.h"
+#include "nTupleAnalysis/baseClasses/interface/helpers.h"
 
 using namespace bbWW;
 
@@ -32,6 +33,13 @@ eventData::eventData(TChain* t, bool mc, std::string y, bool d, bool _fastSkim, 
     }else{
       cout << "No GenPart (missing branch 'nGenPart'). Will ignore ..." << endl;
     }
+
+    if(tree->FindBranch("nGenJet")){
+      truthJets = new nTupleAnalysis::truthParticle("GenJet", tree, true);
+    }else{
+      cout << "No GenPart (missing branch 'nGenPart'). Will ignore ..." << endl;
+    }
+
   }
 
 
@@ -90,6 +98,9 @@ void eventData::resetEvent(){
   qjet25 = false;
   qjetEta = false;
   lepton25 = false;
+
+  WqProbeJets.clear();
+  WqTagJets  .clear();
 }
 
 
@@ -123,7 +134,12 @@ void eventData::update(long int e){
 
   if(truth) truth->update();
 
+
+
   if(truth){
+
+    genJets   = truthJets->getParticles();
+
     if(truth->Wqqs.size() == 1 && truth->Wlnus.size() == 1  ){ 
       wStarlnu = (truth->Wqqs[0]->p.M() > truth->Wlnus[0]->p.M());
 
@@ -238,9 +254,11 @@ void eventData::buildEvent(){
   //
   // Select Jets
   //
-  allJets  = treeJets->getJets(0.0, 1e6, 1e6, false, -1e6, bTagger, false, puIdMin);
-  selJets  = treeJets->getJets(       allJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning);
-  btagJets = treeJets->getJets(       selJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning, bTag,   bTagger);
+  allJets   = treeJets->getJets(0.0, 1e6, 1e6, false, -1e6, bTagger, false, puIdMin);
+  selJets   = treeJets->getJets(       allJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning);
+  selJets30 = treeJets->getJets(       selJets,   30,   1e6, jetEtaMax, doJetCleaning);
+  btagJets  = treeJets->getJets(       selJets30, 30,   1e6, jetEtaMax, doJetCleaning, bTag,   bTagger);
+
 
   //
   //  Select Track Jets
@@ -248,8 +266,8 @@ void eventData::buildEvent(){
   allTrackJets  = treeTrackJets->getJets(0.0, 1e6, 1e6);
   
   // Tight cuts for now https://btv-wiki.docs.cern.ch/ScaleFactors/UL2018/#ak4-c-tagging
-  std::vector<nTupleAnalysis::jetPtr> notLJets = treeJets->getJets(       selJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning, 0.282,   "deepFlavCvL");
-  ctagJets        = treeJets->getJets(       notLJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning, 0.267,   "deepFlavCvB");
+  //std::vector<nTupleAnalysis::jetPtr> notLJets = treeJets->getJets(       selJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning, 0.282,   "deepFlavCvL");
+  //ctagJets        = treeJets->getJets(       notLJets, jetPtMin,   1e6, jetEtaMax, doJetCleaning, 0.267,   "deepFlavCvB");
 
 
   //btag SF
@@ -274,27 +292,6 @@ void eventData::buildEvent(){
   //  Select Electrons
   //
   allElecs         = treeElecs->getElecs();
-
-//  //
-//  // muon to jet matching
-//  //
-//  for(const nTupleAnalysis::muonPtr& muon : preSelMuons){
-//
-//    float dRMin_notMatch = 99;
-//
-//    for(const nTupleAnalysis::jetPtr& jet : selJets){
-//
-//      if((muon->jetIdx != -1) && (muon->jetIdx == jet->jetIdx)){
-//	muon->matchedJet = jet;
-//      }else{
-//	float thisDr = muon->p.DeltaR(jet->p);
-//	if(thisDr < dRMin_notMatch) dRMin_notMatch = thisDr;
-//      }
-//
-//    }
-//    muon->dR = dRMin_notMatch;
-//  }
-
 
   
   
@@ -332,7 +329,41 @@ void eventData::buildEvent(){
 
 
 
+void eventData::doTTbarTandPSelection(){
 
+  //
+  //  WqTag jets are 30 GeV non-bTagged jets
+  //
+  for(const nTupleAnalysis::jetPtr& sJet30 : selJets30){
+    if(find(btagJets.begin(), btagJets.end(), sJet30) != btagJets.end()){
+      if(debug) cout << "fails WqTag-bTag overlap " <<endl;
+      continue;
+    }
+    WqTagJets.push_back(sJet30);
+  }
+
+  //
+  // WqProbe jets are all jets not-btagged with at least one tag somewhere else in the event
+  //
+  for(const nTupleAnalysis::jetPtr& sJet : selJets){
+    if(find(btagJets.begin(), btagJets.end(), sJet) != btagJets.end()){
+      if(debug) cout << "fails WqProbe-bTag overlap " <<endl;
+      continue;
+    }
+
+    bool isProbe = false;
+    for(const nTupleAnalysis::jetPtr& WqTag : WqTagJets){    
+      if(sJet->p.DeltaR(WqTag->p) > 0.2) isProbe = true;
+
+    }
+    
+    if(isProbe) WqProbeJets.push_back(sJet);
+  }
+
+  
+
+  //  std::vector< jetPtr > WqTagJets;
+}
 
 
 

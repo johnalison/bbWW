@@ -81,6 +81,14 @@ namespace bbWW {
 
     //nTupleAnalysis::elecHists* allElecs;
 
+    //
+    //  For TTbar Calibration
+    //
+    nTupleAnalysis::jetHists*  WqTags;
+    nTupleAnalysis::jetHists*  WqProbes;
+    TH1F* mWqqTandP;
+
+    nTupleAnalysis::truthParticleHists* genJets;
 
     eventHists(std::string, fwlite::TFileService&, bool isMC = false, bool blind = true, std::string histDetailLevel = "", bool _debug = false, eventData* event=NULL);
     void Fill(eventData*);
