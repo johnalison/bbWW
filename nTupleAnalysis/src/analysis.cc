@@ -84,6 +84,7 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   cutflowTTCalib->AddCut("jetMultiplicity");
   cutflowTTCalib->AddCut("jetMultiplicity30");
   cutflowTTCalib->AddCut("bTagMultiplicity");
+  cutflowTTCalib->AddCut("bTagMultiplicityExactly2");
 //  if(isDataMCMix){
 //    cutflow->AddCut("mixedEventIsData_3plus4Tag");
 //    cutflow->AddCut("mixedEventIsMC_3plus4Tag");
@@ -107,7 +108,7 @@ analysis::analysis(TChain* _events, TChain* _runs, TChain* _lumiBlocks, fwlite::
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lepton25       = new eventHists("lepton25",       fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetEta        = new eventHists("qjetEta",       fs, isMC, blind, histDetailLevel, debug);
   if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     qjetLead30     = new eventHists("qjetLead30",     fs, isMC, blind, histDetailLevel, debug);
-  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     ttbarCalib     = new eventHists("ttbarCalib",     fs, isMC, blind, histDetailLevel, debug);
+  if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     ttbarCalib     = new eventHists("ttbarCalib",     fs, isMC, blind, histDetailLevel+" tTBarTandP", debug);
   ///if(nTupleAnalysis::findSubStr(histDetailLevel,"allEvents"))     lq25           = new eventHists("lq25",        fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon0_Jpsi   = new eventHists("Dimuon0_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
 //  if(nTupleAnalysis::findSubStr(histDetailLevel,"HLTStudy"))      Dimuon25_Jpsi  = new eventHists("Dimuon25_Jpsi",   fs, isMC, blind, histDetailLevel, debug);
@@ -558,7 +559,7 @@ void analysis::ttbarCalibrationStudy(){
   }
   cutflowTTCalib->Fill("jetMultiplicity30", event);
 
-  bool bTagMultiplicity = (event->btagJets.size() == 2);
+  bool bTagMultiplicity = (event->btagJets.size() >= 2);
   if(!bTagMultiplicity){
     if(debug) cout << "Fail bJet Multiplicity" << endl;
     return;
@@ -566,7 +567,15 @@ void analysis::ttbarCalibrationStudy(){
   cutflowTTCalib->Fill("bTagMultiplicity", event);
 
 
+  bool bTagMultiplicityExactly2 = (event->btagJets.size() == 2);
+  if(!bTagMultiplicityExactly2){
+    if(debug) cout << "Fail bJet Multiplicity Exactly 2 jets" << endl;
+    return;
+  }
+  cutflowTTCalib->Fill("bTagMultiplicityExactly2", event);
 
+  
+  
   //bool passNLeptons = (event->pass1Lepton); 
   event->doTTbarTandPSelection();
 

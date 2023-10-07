@@ -1,6 +1,6 @@
 #include "bbWW/nTupleAnalysis/interface/eventHists.h"
 #include "nTupleAnalysis/baseClasses/interface/helpers.h"
-
+#include "nTupleAnalysis/baseClasses/interface/trijet.h"
 using namespace bbWW;
 
 using std::cout; using std::endl;
@@ -77,9 +77,20 @@ eventHists::eventHists(std::string name, fwlite::TFileService& fs, bool isMC, bo
   //
   //   TTbar TandP Calibration
   //
-  WqTags   = new nTupleAnalysis::jetHists(name+"/WqTags", fs, "Wq Tag Jets");
-  WqProbes = new nTupleAnalysis::jetHists(name+"/WqProbes", fs, "Wq Probe Jets");
-  mWqqTandP = dir.make<TH1F>("mWqqTandP", (name+"/mWqqTandP;  nWq Probes; Entries").c_str(), 100,0,150);
+  if(histDetailLevel.find("tTBarTandP") != std::string::npos){
+    WqTags   = new nTupleAnalysis::jetHists(name+"/WqTags", fs, "Wq Tag Jets");
+    WqqTandPPairs  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs", fs, " TopCands Pairs");
+    WqqTandPPairs_matched  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_matched", fs, " Wqq TandP Pairs (Truth Mathced)");
+
+    WqqTandPPairs_dR  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_dR", fs, " TopCands Pairs");
+    WqqTandPPairs_dR_matched  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_dR_matched", fs, " Wqq TandP Pairs (Truth Mathced)");
+
+    WqqTandPPairs_pT  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_pT", fs, " TopCands Pairs");
+    WqqTandPPairs_pT_matched  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_pT_matched", fs, " Wqq TandP Pairs (Truth Mathced)");
+
+    WqqTandPPairs_xWbW  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_xWbW", fs, " TopCands Pairs");
+    WqqTandPPairs_xWbW_matched  = new nTupleAnalysis::trijetHists(name+"/WqqTandPPairs_xWbW_matched", fs, " Wqq TandP Pairs (Truth Mathced)");
+  }
 
   //    TH1F* nWqProbes;
   //    TH1F* mWTandP;
@@ -332,28 +343,110 @@ void eventHists::Fill(eventData* event){
   //
   //  TTBar TandP Calibration
   //
-  WqTags->nJets->Fill(event->WqTagJets.size(), event->weight);
-  for(auto &jet: event->WqTagJets) WqTags->Fill(jet, event->weight);
+  if(WqTags){
+
+    //
+    //  Plot the tags
+    //
+    WqTags->nJets->Fill(event->WqTagJets.size(), event->weight);
+    for(auto &jet: event->WqTagJets) WqTags->Fill(jet, event->weight);
+
+    //
+    // Mass
+    //
+    //WqqTandPPairs->nDiJets->Fill(event->WqqTandPPairs.size(), event->weight);
+    for(std::shared_ptr<nTupleAnalysis::trijet>& pair : event->WqqTandPPairs){
+      WqqTandPPairs->Fill(pair, event->weight);
+   
+      if(pair->W->truthMatch)WqqTandPPairs_matched->Fill(pair, event->weight);
+    }
+
+    for(std::shared_ptr<nTupleAnalysis::trijet>& pair : event->WqqTandPPairs_dR){
+      WqqTandPPairs_dR->Fill(pair, event->weight);
+   
+      if(pair->W->truthMatch)WqqTandPPairs_dR_matched->Fill(pair, event->weight);
+    }
+
+    for(std::shared_ptr<nTupleAnalysis::trijet>& pair : event->WqqTandPPairs_pT){
+      WqqTandPPairs_pT->Fill(pair, event->weight);
+      if(pair->W->truthMatch) WqqTandPPairs_pT_matched->Fill(pair, event->weight);
+    }
+
+    for(std::shared_ptr<nTupleAnalysis::trijet>& pair : event->WqqTandPPairs_xWbW){
+      WqqTandPPairs_xWbW->Fill(pair, event->weight);
+      if(pair->W->truthMatch) WqqTandPPairs_xWbW_matched->Fill(pair, event->weight);
+    }
+
+  }
+
+
 
   //
   //  Made dr to nearest q from W
-  //    - Figure out a good mathicng critera
+  //   
+//  if(event->truth){
+//    if(event->truth->Wqqs.size() == 1){   
+//      const nTupleAnalysis::particlePtr& Wqq = event->truth->Wqqs[0];
+//      const nTupleAnalysis::particlePtr& q0 = Wqq->daughters[0];
+//      const nTupleAnalysis::particlePtr& q1 = Wqq->daughters[1];
+//
+//      const nTupleAnalysis::jetPtr q0_matchedJet = q0->matchedJet.lock();
+//      if(q0_matchedJet){
+//	if(find(event->WqTagJets.begin(), event->WqTagJets.end(), q0_matchedJet) != event->WqTagJets.end()){
+//	  WqTags_matched->Fill(q0_matchedJet, event->weight);
+//	}
+//
+//	//if(find(event->WqProbeJets.begin(), event->WqProbeJets.end(), q0_matchedJet) != event->WqProbeJets.end()){
+//	//  WqProbes_matched->Fill(q0_matchedJet, event->weight);
+//	//}
+//
+//      }
+//
+//      const nTupleAnalysis::jetPtr q1_matchedJet = q1->matchedJet.lock();
+//      if(q1_matchedJet){
+//	if(find(event->WqTagJets.begin(), event->WqTagJets.end(), q1_matchedJet) != event->WqTagJets.end()){
+//	  WqTags_matched->Fill(q1_matchedJet, event->weight);
+//	}
+//
+//	//if(find(event->WqProbeJets.begin(), event->WqProbeJets.end(), q1_matchedJet) != event->WqProbeJets.end()){
+//	//  WqProbes_matched->Fill(q1_matchedJet, event->weight);
+//	//}
+//
+//      }
+//
+//      if(q0_matchedJet && q1_matchedJet && 
+//	 q0_matchedJet != q1_matchedJet &&
+//	 (q0_matchedJet->p.DeltaR(q1_matchedJet->p) < 3.5) &&
+//	 (q0_matchedJet->p.Pt() > 30 || q1_matchedJet->p.Pt() > 30)
+// 	 ){
+//	mWqqTandP_matched->Fill( (q0_matchedJet->p + q1_matchedJet->p).M(), event->weight);
+//	dRWqqTandP_matched->Fill( q0_matchedJet->p.DeltaR(q1_matchedJet->p), event->weight);
+//	
+//	float q0_Pt = q0_matchedJet->p.Pt();
+//	float q1_Pt = q1_matchedJet->p.Pt();
+//	if(q0_Pt > q1_Pt)
+//	  TagPt_vs_ProbePt_matched->Fill(q1_Pt,q0_Pt, event->weight);
+//	else
+//	  TagPt_vs_ProbePt_matched->Fill(q0_Pt,q1_Pt, event->weight);
+//      }
+//
+//
+//      //      const nTupleAnalysis::jetPtr q1_matchedJet = q1->matchedJet.lock();      
+//
+//      for(auto &jet: event->WqTagJets){
+//	dRqJet->Fill(q0->p.DeltaR(jet->p), event->weight);
+//	dRqJet->Fill(q1->p.DeltaR(jet->p), event->weight);
+//      }
+//
+//      //for(auto &jet: event->WqProbeJets){
+//      //	dRqJet->Fill(q0->p.DeltaR(jet->p), event->weight);
+//      //	dRqJet->Fill(q1->p.DeltaR(jet->p), event->weight);
+//      //}
+//
+//    }
+//  }
 
-  //
-  //  Add plots for truth matchd W
-  //    Figure out purity
 
-  //
-  // Mass
-  //
-  WqProbes->nJets->Fill(event->WqProbeJets.size(), event->weight);
-  for(const nTupleAnalysis::jetPtr& WqProbe : event->WqProbeJets){
-    WqProbes->Fill(WqProbe, event->weight);
-
-    for(const nTupleAnalysis::jetPtr& WqTag : event->WqTagJets){    
-      mWqqTandP->Fill( (WqProbe->p + WqTag->p).M(), event->weight);
-    }
-  }
 
 
 

@@ -12,6 +12,7 @@
 #include "nTupleAnalysis/baseClasses/interface/muonHists.h"
 #include "nTupleAnalysis/baseClasses/interface/dimuonHists.h"
 #include "nTupleAnalysis/baseClasses/interface/dijetHists.h"
+#include "nTupleAnalysis/baseClasses/interface/trijetHists.h"
 #include "nTupleAnalysis/baseClasses/interface/elecHists.h"
 
 
@@ -84,9 +85,22 @@ namespace bbWW {
     //
     //  For TTbar Calibration
     //
-    nTupleAnalysis::jetHists*  WqTags;
-    nTupleAnalysis::jetHists*  WqProbes;
-    TH1F* mWqqTandP;
+    nTupleAnalysis::jetHists*     WqTags = NULL;
+    nTupleAnalysis::trijetHists*  WqqTandPPairs;
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_matched;
+
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_dR;
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_dR_matched;
+
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_pT;
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_pT_matched;
+
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_xWbW;
+    nTupleAnalysis::trijetHists*  WqqTandPPairs_xWbW_matched;
+
+
+
+    TH1F* dRqJet;
 
     nTupleAnalysis::truthParticleHists* genJets;
 

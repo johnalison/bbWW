@@ -86,9 +86,12 @@ void eventData::resetEvent(){
   if(debug) std::cout<<"Reset eventData"<<std::endl;
   preSelDiMuons.clear();
 
-  diBJets.reset();
 
-  diCJets.reset();
+  WqqTandPPairs.clear();
+  WqqTandPPairs_dR.clear();
+  WqqTandPPairs_pT.clear();
+  WqqTandPPairs_xWbW.clear();
+
 
   passL1  = false;
   passHLT = false;
@@ -99,7 +102,6 @@ void eventData::resetEvent(){
   qjetEta = false;
   lepton25 = false;
 
-  WqProbeJets.clear();
   WqTagJets  .clear();
 }
 
@@ -334,35 +336,54 @@ void eventData::doTTbarTandPSelection(){
   //
   //  WqTag jets are 30 GeV non-bTagged jets
   //
-  for(const nTupleAnalysis::jetPtr& sJet30 : selJets30){
+  for(nTupleAnalysis::jetPtr& sJet30 : selJets30){
     if(find(btagJets.begin(), btagJets.end(), sJet30) != btagJets.end()){
       if(debug) cout << "fails WqTag-bTag overlap " <<endl;
       continue;
     }
     WqTagJets.push_back(sJet30);
-  }
 
-  //
-  // WqProbe jets are all jets not-btagged with at least one tag somewhere else in the event
-  //
-  for(const nTupleAnalysis::jetPtr& sJet : selJets){
-    if(find(btagJets.begin(), btagJets.end(), sJet) != btagJets.end()){
-      if(debug) cout << "fails WqProbe-bTag overlap " <<endl;
-      continue;
-    }
-
-    bool isProbe = false;
-    for(const nTupleAnalysis::jetPtr& WqTag : WqTagJets){    
-      if(sJet->p.DeltaR(WqTag->p) > 0.2) isProbe = true;
-
-    }
     
-    if(isProbe) WqProbeJets.push_back(sJet);
+    for(nTupleAnalysis::jetPtr& sJet : selJets){
+      if(sJet == sJet30) continue;
+
+      if(sJet->p.Pt() > sJet30->p.Pt()) continue;
+
+      if(find(btagJets.begin(), btagJets.end(), sJet) != btagJets.end()){
+	if(debug) cout << "fails WqProbe-bTag overlap " <<endl;
+	continue;
+      }
+
+      std::shared_ptr<nTupleAnalysis::trijet> trijet_0 = std::make_shared<nTupleAnalysis::trijet>(nTupleAnalysis::trijet(btagJets.at(0),sJet30,sJet, truth));
+      std::shared_ptr<nTupleAnalysis::trijet> trijet_1 = std::make_shared<nTupleAnalysis::trijet>(nTupleAnalysis::trijet(btagJets.at(1),sJet30,sJet, truth));
+      
+      if(trijet_0->xWt < trijet_1->xWt)
+	WqqTandPPairs.push_back(trijet_0);
+      else
+	WqqTandPPairs.push_back(trijet_1);
+
+    }
   }
 
+  //
+  // Cuts on the TandP probes
+  //
+  for(std::shared_ptr<nTupleAnalysis::trijet>& pair : WqqTandPPairs){
+    if(pair->W->dR > 3.5) continue;      
+    WqqTandPPairs_dR.push_back(pair);
+
+    if((pair->W->lead->p.Pt() + 1.33*pair->W->subl->p.Pt()) < 70) continue;
+    WqqTandPPairs_pT.push_back(pair);
+
+    if(pair->xWbW  > 4) continue;
+    WqqTandPPairs_xWbW.push_back(pair);
+
+    
+  }
+// 
   
 
-  //  std::vector< jetPtr > WqTagJets;
+
 }
 
 

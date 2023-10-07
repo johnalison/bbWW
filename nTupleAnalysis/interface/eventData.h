@@ -16,6 +16,7 @@
 #include "nTupleAnalysis/baseClasses/interface/eventData.h"
 #include "nTupleAnalysis/baseClasses/interface/dimuon.h"
 #include "nTupleAnalysis/baseClasses/interface/dijet.h"
+#include "nTupleAnalysis/baseClasses/interface/trijet.h"
 #include "nTupleAnalysis/baseClasses/interface/trigData.h"
 
 namespace bbWW {
@@ -78,9 +79,13 @@ namespace bbWW {
     //  
     // For the TTBar TandP calibration
     //
-    std::vector< nTupleAnalysis::jetPtr > WqTagJets;
-    std::vector< nTupleAnalysis::jetPtr > WqProbeJets;
-
+    std::vector< nTupleAnalysis::jetPtr > WqTagJets;    
+    std::vector<std::shared_ptr<nTupleAnalysis::trijet> > WqqTandPPairs;
+    std::vector<std::shared_ptr<nTupleAnalysis::trijet> > WqqTandPPairs_dR;
+    std::vector<std::shared_ptr<nTupleAnalysis::trijet> > WqqTandPPairs_pT;
+    std::vector<std::shared_ptr<nTupleAnalysis::trijet> > WqqTandPPairs_xWbW;
+    
+    
     //std::vector<nTupleAnalysis::jetPtr> ctagJets;//jets passing pt/eta and cTagging requirements
 
     nTupleAnalysis::trackJetData* treeTrackJets;
@@ -93,8 +98,8 @@ namespace bbWW {
     std::vector<nTupleAnalysis::dimuonPtr> preSelDiMuons;
     bool diMuonIsolated = true;
 
-    std::shared_ptr<nTupleAnalysis::dijet> diBJets;
-    std::shared_ptr<nTupleAnalysis::dijet> diCJets;
+    //std::shared_ptr<nTupleAnalysis::dijet> diBJets;
+    //std::shared_ptr<nTupleAnalysis::dijet> diCJets;
 
 
 
